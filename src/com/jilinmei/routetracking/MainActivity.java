@@ -39,7 +39,6 @@ public class MainActivity extends Activity {
 	LocationData locData = null;
 	MyLocationOverlay myLocationOverlay = null;
 	
-	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);  
