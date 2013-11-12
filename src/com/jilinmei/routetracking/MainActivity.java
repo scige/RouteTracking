@@ -1,7 +1,6 @@
 package com.jilinmei.routetracking;
 
 import android.app.Activity;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -26,27 +25,25 @@ public class MainActivity extends Activity {
 	MapView mMapView = null; 
 	MapController mMapController = null;
 	
+	LocationClient mLocationClient = null;
+	BDLocationListener myListener = new MyLocationListener();
+	
+	LocationData locData = null;
+	MyLocationOverlay myLocationOverlay = null;
+	
 	Button gpsButton = null;
 	Button networkButton = null;
 	Button stopButton = null;
 	TextView locationText = null;
-	LocationManager locationManager = null;
-	MyLocationListener myLocationListener = null;
-	
-	public LocationClient mLocationClient = null;
-	public BDLocationListener myListener = new MyLocationListener();
-	
-	LocationData locData = null;
-	MyLocationOverlay myLocationOverlay = null;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);  
         
+        //注意：请在试用setContentView前初始化BMapManager对象，否则会报错  
         mBMapMan=new BMapManager(getApplication());  
         mBMapMan.init("D5242984b7dd7f4edb08e39c2c160b49", null);    // for debug
         //mBMapMan.init("CAa950947866f17f532b3ae66f1e1c46", null);    // for release
-        //注意：请在试用setContentView前初始化BMapManager对象，否则会报错  
         setContentView(R.layout.activity_main);  
         
         mMapView=(MapView)findViewById(R.id.bmapsView);  
@@ -55,19 +52,19 @@ public class MainActivity extends Activity {
         mMapView.getController().enableClick(true);
         mMapView.setBuiltInZoomControls(true);
         
-        mLocationClient = new LocationClient(getApplicationContext());     //声明LocationClient类
-        mLocationClient.registerLocationListener( myListener );    //注册监听函数
+        mLocationClient = new LocationClient(getApplicationContext());
+        mLocationClient.registerLocationListener( myListener );
         mLocationClient.setAK("D5242984b7dd7f4edb08e39c2c160b49");
         
         LocationClientOption option = new LocationClientOption();
         option.setOpenGps(true);
-        //option.setAddrType("all");//返回的定位结果包含地址信息
-        option.setCoorType("bd09ll");//返回的定位结果是百度经纬度,默认值gcj02
-        option.setScanSpan(1000);//设置发起定位请求的间隔时间为5000ms
-        option.disableCache(true);//禁止启用缓存定位
-        //option.setPoiNumber(5);    //最多返回POI个数   
-        //option.setPoiDistance(1000); //poi查询距离        
-        //option.setPoiExtraInfo(true); //是否需要POI的电话和地址等详细信息        
+        option.setCoorType("bd09ll");	//返回的定位结果是百度经纬度,默认值gcj02
+        option.setScanSpan(5000);		//设置发起定位请求的间隔时间为5000ms
+        option.disableCache(true);		//禁止启用缓存定位
+        //option.setAddrType("all");	//返回的定位结果包含地址信息
+        //option.setPoiNumber(5);    	//最多返回POI个数 
+        //option.setPoiDistance(1000); 	//poi查询距离 
+        //option.setPoiExtraInfo(true); //是否需要POI的电话和地址等详细信息 
         mLocationClient.setLocOption(option);
         mLocationClient.start();
         
@@ -82,9 +79,9 @@ public class MainActivity extends Activity {
 		//修改定位数据后刷新图层生效
 		mMapView.refresh();
         
-        //GeoPoint point =new GeoPoint((int)(39.915* 1E6),(int)(116.404* 1E6)); 
-        //mMapController.setCenter(point);
-        //mMapController.setZoom(16);
+        GeoPoint point =new GeoPoint((int)(39.915* 1E6),(int)(116.404* 1E6)); 
+        mMapController.setCenter(point);
+        mMapController.setZoom(16);
         
         locationText = (TextView)findViewById(R.id.locationText);
         gpsButton = (Button)findViewById(R.id.useGPSProvider);
@@ -123,7 +120,8 @@ public class MainActivity extends Activity {
         @Override
         public void onReceiveLocation(BDLocation location) {
         	if (location == null)
-        		return ;
+        		return;
+        	
         	StringBuffer sb = new StringBuffer(256);
         	sb.append("time : ");
         	sb.append(location.getTime());
@@ -144,16 +142,8 @@ public class MainActivity extends Activity {
             	sb.append("\naddr : ");
             	sb.append(location.getAddrStr());
             } 
-     
         	System.out.println(sb);
         	
-	        double lat = location.getLatitude();
-	        double lon = location.getLongitude();
-	        GeoPoint point = new GeoPoint((int)(lat * 1E6),(int)(lon * 1E6));  
-	        mMapController.setCenter(point);
-	        mMapController.setZoom(16);
-	        locationText.setText(lat + ", " + lon);
-	        
             locData.latitude = location.getLatitude();
             locData.longitude = location.getLongitude();
             //如果不显示定位精度圈，将accuracy赋值为0即可
@@ -163,6 +153,13 @@ public class MainActivity extends Activity {
             myLocationOverlay.setData(locData);
             //更新图层数据执行刷新后生效
             mMapView.refresh();
+            
+	        double lat = location.getLatitude();
+	        double lon = location.getLongitude();
+	        GeoPoint point = new GeoPoint((int)(lat * 1E6),(int)(lon * 1E6));  
+	        mMapController.setCenter(point);
+	        mMapController.setZoom(16);
+	        locationText.setText(lat + ", " + lon);
         }
 
 		@Override
@@ -173,33 +170,33 @@ public class MainActivity extends Activity {
     }
     
     @Override  
-    protected void onDestroy(){  
-        mMapView.destroy();  
+    protected void onResume(){  
+        mMapView.onResume();  
         if(mBMapMan!=null){  
-                mBMapMan.destroy();  
-                mBMapMan=null;  
+            mBMapMan.start();  
         }  
-        super.onDestroy();  
+       super.onResume();  
     }
-    
+
     @Override  
     protected void onPause(){  
         mMapView.onPause();  
         if(mBMapMan!=null){  
-               mBMapMan.stop();  
+            mBMapMan.stop();  
         }  
         super.onPause();  
     }
     
     @Override  
-    protected void onResume(){  
-        mMapView.onResume();  
+    protected void onDestroy(){  
+        mMapView.destroy();  
         if(mBMapMan!=null){  
-                mBMapMan.start();  
+            mBMapMan.destroy();  
+            mBMapMan=null;  
         }  
-       super.onResume();  
+        super.onDestroy();  
     }
-
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
