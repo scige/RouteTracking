@@ -33,8 +33,11 @@ public class MainActivity extends Activity {
 	MyLocationOverlay myLocationOverlay = null;
 	
 	Button dataButton = null;
+	Button clearButton = null;
 	Button stopButton = null;
 	TextView locationText = null;
+	
+	DBAdapter db;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,9 +88,14 @@ public class MainActivity extends Activity {
         
         locationText = (TextView)findViewById(R.id.locationText);
         dataButton = (Button)findViewById(R.id.locationData);
+        clearButton = (Button)findViewById(R.id.clearData);
         stopButton = (Button)findViewById(R.id.stopListener);
         dataButton.setOnClickListener(new DataButtonListener());
+        clearButton.setOnClickListener(new ClearButtonListener());
         stopButton.setOnClickListener(new StopButtonListener());
+        
+        db = new DBAdapter(this);
+        db.open();
     }
     
     class DataButtonListener implements OnClickListener
@@ -96,9 +104,18 @@ public class MainActivity extends Activity {
 		public void onClick(View v) {
 			System.out.println("DataButtonListener::onClick()");
 			Intent intent = new Intent(MainActivity.this, LocationActivity.class);
-			intent.putExtra("latitude", locData.latitude);
-			intent.putExtra("longitude", locData.longitude);
+			//intent.putExtra("latitude", locData.latitude);
+			//intent.putExtra("longitude", locData.longitude);
 			startActivity(intent);
+		}
+    }
+    
+    class ClearButtonListener implements OnClickListener
+    {
+		@Override
+		public void onClick(View v) {
+			System.out.println("ClearButtonListener::onClick()");
+			db.removeAllLocations();
 		}
     }
     
@@ -154,6 +171,8 @@ public class MainActivity extends Activity {
 	        mMapController.setCenter(point);
 	        mMapController.setZoom(16);
 	        locationText.setText(lat + ", " + lon);
+	        
+	        db.insertLocation(lat, lon);
         }
 
 		@Override

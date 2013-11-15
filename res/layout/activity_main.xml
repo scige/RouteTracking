@@ -13,15 +13,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/bmapsView"
-        android:text="GPS" />
+        android:text="Location" />
     
-    <Button android:id="@+id/stopListener"
+    <Button android:id="@+id/clearData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/bmapsView"
         android:layout_toRightOf="@id/locationData"
-        android:text="Stop" />
+        android:text="Clear" />
 
+    <Button android:id="@+id/stopListener"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/bmapsView"
+        android:layout_toRightOf="@id/clearData"
+        android:text="Stop" />
+    
     <TextView
         android:id="@+id/locationText"
         android:layout_width="wrap_content"
