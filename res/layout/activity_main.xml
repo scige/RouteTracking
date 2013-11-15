@@ -9,31 +9,24 @@
                     android:layout_height="600px"  
                     android:clickable="true" />  
                     
-    <Button android:id="@+id/useGPSProvider"
+    <Button android:id="@+id/locationData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/bmapsView"
         android:text="GPS" />
     
-    <Button android:id="@+id/useNetworkProvider"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/bmapsView"
-        android:layout_toRightOf="@id/useGPSProvider"
-        android:text="Network" />
-    
     <Button android:id="@+id/stopListener"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/bmapsView"
-        android:layout_toRightOf="@id/useNetworkProvider"
+        android:layout_toRightOf="@id/locationData"
         android:text="Stop" />
 
     <TextView
         android:id="@+id/locationText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/useGPSProvider"
+        android:layout_below="@id/locationData"
         android:layout_marginLeft="10dp"
         android:text="none" />
 

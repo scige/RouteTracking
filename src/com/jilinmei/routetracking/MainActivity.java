@@ -1,6 +1,7 @@
 package com.jilinmei.routetracking;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -31,8 +32,7 @@ public class MainActivity extends Activity {
 	LocationData locData = null;
 	MyLocationOverlay myLocationOverlay = null;
 	
-	Button gpsButton = null;
-	Button networkButton = null;
+	Button dataButton = null;
 	Button stopButton = null;
 	TextView locationText = null;
 	
@@ -84,27 +84,21 @@ public class MainActivity extends Activity {
         mMapController.setZoom(16);
         
         locationText = (TextView)findViewById(R.id.locationText);
-        gpsButton = (Button)findViewById(R.id.useGPSProvider);
-        networkButton = (Button)findViewById(R.id.useNetworkProvider);
+        dataButton = (Button)findViewById(R.id.locationData);
         stopButton = (Button)findViewById(R.id.stopListener);
-        gpsButton.setOnClickListener(new GPSButtonListener());
-        networkButton.setOnClickListener(new NetworkButtonListener());
+        dataButton.setOnClickListener(new DataButtonListener());
         stopButton.setOnClickListener(new StopButtonListener());
     }
     
-    class GPSButtonListener implements OnClickListener
+    class DataButtonListener implements OnClickListener
     {
 		@Override
 		public void onClick(View v) {
-			System.out.println("GPSButtonListener::onClick()");
-		}
-    }
-    
-    class NetworkButtonListener implements OnClickListener
-    {
-		@Override
-		public void onClick(View v) {
-			System.out.println("NetworkButtonListener::onClick()");
+			System.out.println("DataButtonListener::onClick()");
+			Intent intent = new Intent(MainActivity.this, LocationActivity.class);
+			intent.putExtra("latitude", locData.latitude);
+			intent.putExtra("longitude", locData.longitude);
+			startActivity(intent);
 		}
     }
     
