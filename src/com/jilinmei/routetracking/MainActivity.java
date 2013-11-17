@@ -2,6 +2,7 @@ package com.jilinmei.routetracking;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -14,14 +15,21 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.BMapManager;
+import com.baidu.mapapi.map.Geometry;
+import com.baidu.mapapi.map.Graphic;
+import com.baidu.mapapi.map.GraphicsOverlay;
 import com.baidu.mapapi.map.LocationData;
 import com.baidu.mapapi.map.MapController;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MyLocationOverlay;
+import com.baidu.mapapi.map.Symbol;
 import com.baidu.platform.comapi.basestruct.GeoPoint;
 
 public class MainActivity extends Activity {
 
+	boolean bStatus = true;
+	boolean bInitial = true;
+	
 	BMapManager mBMapMan = null;  
 	MapView mMapView = null; 
 	MapController mMapController = null;
@@ -29,8 +37,11 @@ public class MainActivity extends Activity {
 	LocationClient mLocationClient = null;
 	BDLocationListener myListener = new MyLocationListener();
 	
-	LocationData locData = null;
+	//LocationData locData = null;
+	LocationData lastLocationData = null;
 	MyLocationOverlay myLocationOverlay = null;
+	
+    GraphicsOverlay mGraphicsOverlay = null;
 	
 	Button dataButton = null;
 	Button clearButton = null;
@@ -51,7 +62,7 @@ public class MainActivity extends Activity {
         
         mMapView=(MapView)findViewById(R.id.bmapsView);  
         mMapController=mMapView.getController(); 
-        mMapView.getController().setZoom(14);
+        mMapView.getController().setZoom(17);
         mMapView.getController().enableClick(true);
         mMapView.setBuiltInZoomControls(true);
         
@@ -71,20 +82,27 @@ public class MainActivity extends Activity {
         mLocationClient.setLocOption(option);
         mLocationClient.start();
         
+		//添加几何图层
+        mGraphicsOverlay = new GraphicsOverlay(mMapView);
+        mMapView.getOverlays().add(mGraphicsOverlay);
+		
         //定位图层初始化
 		myLocationOverlay = new MyLocationOverlay(mMapView);
 		//设置定位数据
-        locData = new LocationData();
+        LocationData locData = new LocationData();
 	    myLocationOverlay.setData(locData);
 	    //添加定位图层
 		mMapView.getOverlays().add(myLocationOverlay);
 		myLocationOverlay.enableCompass();
+		
 		//修改定位数据后刷新图层生效
 		mMapView.refresh();
+		
+		lastLocationData = new LocationData();
         
         GeoPoint point =new GeoPoint((int)(39.915* 1E6),(int)(116.404* 1E6)); 
         mMapController.setCenter(point);
-        mMapController.setZoom(16);
+        mMapController.setZoom(17);
         
         locationText = (TextView)findViewById(R.id.locationText);
         dataButton = (Button)findViewById(R.id.locationData);
@@ -124,6 +142,17 @@ public class MainActivity extends Activity {
 		@Override
 		public void onClick(View v) {
 			System.out.println("StopButtonListener::onClick()");
+			bStatus = !bStatus;
+			if (bStatus) {
+				mLocationClient.start();
+				locationText.setText("start");
+				stopButton.setText("Stop");
+			}
+			else {
+				mLocationClient.stop();
+				locationText.setText("stop");
+				stopButton.setText("Start");
+			}
 		}
     }
     
@@ -153,26 +182,72 @@ public class MainActivity extends Activity {
             	sb.append("\naddr : ");
             	sb.append(location.getAddrStr());
             } 
-        	System.out.println(sb);
+        	//System.out.println(sb);
         	
+        	System.out.println("DEBUG: " + lastLocationData.latitude);
+        	System.out.println("DEBUG: " + lastLocationData.longitude);
+        	
+        	if (bInitial == false &&
+        		lastLocationData.latitude == location.getLatitude() &&
+        		lastLocationData.longitude == location.getLongitude())
+        		return;
+        	
+        	float[] results = new float[1];
+        	Location.distanceBetween(location.getLatitude(), location.getLongitude(),
+        			lastLocationData.latitude, lastLocationData.longitude, results);
+        	System.out.println("Distance: " + results[0]);
+        	//locationText.setText("Distance: " + results[0]);
+        	
+        	if (results[0] < 10.0)
+        		return;
+        	
+            //更新定位数据
+        	LocationData locData = new LocationData();
             locData.latitude = location.getLatitude();
             locData.longitude = location.getLongitude();
-            //如果不显示定位精度圈，将accuracy赋值为0即可
-            locData.accuracy = location.getRadius();
+            locData.accuracy = 0;
             locData.direction = location.getDerect();
-            //更新定位数据
             myLocationOverlay.setData(locData);
-            //更新图层数据执行刷新后生效
-            mMapView.refresh();
-            
+        	
 	        double lat = location.getLatitude();
 	        double lon = location.getLongitude();
 	        GeoPoint point = new GeoPoint((int)(lat * 1E6),(int)(lon * 1E6));  
+	        GeoPoint lastPoint = new GeoPoint(
+	        		(int)(lastLocationData.latitude * 1E6), 
+	        		(int)(lastLocationData.longitude * 1E6));
+            
+	        //更新路径
+	        if (bInitial == false) {
+	            Geometry lineGeometry = new Geometry();
+	            GeoPoint[] linePoints = new GeoPoint[2];
+	            linePoints[0] = lastPoint;
+	            linePoints[1] = point;
+	            lineGeometry.setPolyLine(linePoints);
+	  			Symbol lineSymbol = new Symbol();
+	  			Symbol.Color lineColor = lineSymbol.new Color();
+	  			lineColor.red = 122;
+	  			lineColor.green = 155;
+	  			lineColor.blue = 229;
+	  			lineColor.alpha = 255;
+	  			lineSymbol.setLineSymbol(lineColor, 7);
+	  			//生成Graphic对象
+	  			Graphic lineGraphic = new Graphic(lineGeometry, lineSymbol);
+	            mGraphicsOverlay.setData(lineGraphic);
+	        }
+            
+            //更新图层数据执行刷新后生效
+            mMapView.refresh();
+            
 	        mMapController.setCenter(point);
-	        mMapController.setZoom(16);
 	        locationText.setText(lat + ", " + lon);
 	        
 	        db.insertLocation(lat, lon);
+	        
+	        bInitial = false;
+            lastLocationData.latitude = location.getLatitude();
+            lastLocationData.longitude = location.getLongitude();
+            lastLocationData.accuracy = 0;
+            lastLocationData.direction = location.getDerect();
         }
 
 		@Override
