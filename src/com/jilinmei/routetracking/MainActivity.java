@@ -1,9 +1,21 @@
 package com.jilinmei.routetracking;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -197,7 +209,6 @@ public class MainActivity extends Activity {
         			lastLocationData.latitude, lastLocationData.longitude, results);
         	System.out.println("Distance: " + results[0]);
         	//locationText.setText("Distance: " + results[0]);
-        	
         	if (results[0] < 10.0)
         		return;
         	
@@ -241,8 +252,17 @@ public class MainActivity extends Activity {
 	        mMapController.setCenter(point);
 	        locationText.setText(lat + ", " + lon);
 	        
+	        //存储到DB中
 	        db.insertLocation(lat, lon);
 	        
+	        //发送到服务器
+	        Map<String, String> params = new HashMap<String, String>();
+	        params.put("latitude", String.valueOf(lat));
+	        params.put("longitude", String.valueOf(lon));
+	        new UploadDataTask().execute("http://api.jilinmei.com:3000/locations/upload",
+	        							 getRequestData(params, "utf-8").toString());
+	        
+	        //更新lastLocationData
 	        bInitial = false;
             lastLocationData.latitude = location.getLatitude();
             lastLocationData.longitude = location.getLongitude();
@@ -255,6 +275,85 @@ public class MainActivity extends Activity {
 			// TODO Auto-generated method stub
 			
 		}
+    }
+    
+    public static StringBuffer getRequestData(Map<String, String> params, String encode) {
+    	StringBuffer stringBuffer = new StringBuffer();    //存储封装好的请求体信息
+        try {
+        	for(Map.Entry<String, String> entry : params.entrySet()) {
+    	    stringBuffer.append(entry.getKey())
+    	                       .append("=")
+    	                       .append(URLEncoder.encode(entry.getValue(), encode))
+    	                       .append("&");
+    	    }
+    	    stringBuffer.deleteCharAt(stringBuffer.length() - 1);    //删除最后的一个"&"
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	return stringBuffer;
+    }
+    
+    private InputStream openHttpConnection(String urlString, String params) throws IOException {
+	    InputStream in = null;
+    	URL url = new URL(urlString);
+    	URLConnection conn = url.openConnection();
+    	if (!(conn instanceof HttpURLConnection)) {
+    		throw new IOException("Not a Http Connection");
+    	}
+    	
+    	byte[] data = params.getBytes();
+    	try {
+	    	HttpURLConnection httpConn = (HttpURLConnection)conn;
+	    	//httpConn.setAllowUserInteraction(false);
+	    	//httpConn.setInstanceFollowRedirects(true);
+	    	httpConn.setDoInput(true);
+	    	httpConn.setDoOutput(true);
+	    	httpConn.setRequestMethod("POST");
+	    	httpConn.setUseCaches(false);
+	    	httpConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            httpConn.setRequestProperty("Content-Length", String.valueOf(data.length));
+            OutputStream outputStream = httpConn.getOutputStream();
+            outputStream.write(data);
+            outputStream.flush();
+            outputStream.close();
+	    	//httpConn.connect();
+	    	int response = httpConn.getResponseCode();
+	    	if (response == HttpURLConnection.HTTP_OK) {
+	    		in = httpConn.getInputStream();
+	    	}
+    	} catch (Exception ex) {
+    		Log.d("Networking", ex.getLocalizedMessage());
+    		throw new IOException("Error connecting");
+    	}
+    	
+    	return in;
+    }
+    
+    private String uploadLocation(String url, String params) {
+    	String result = null;
+		InputStream in = null;
+		try {
+			in = openHttpConnection(url, params);
+			//TODO parse response data
+			in.close();
+		} catch (IOException ex) {
+			Log.d("MainActivity", ex.getLocalizedMessage());
+		}
+		return result;
+    }
+    
+    private class UploadDataTask extends AsyncTask<String, Void, String> {
+
+		@Override
+		protected String doInBackground(String... urls) {
+			return uploadLocation(urls[0], urls[1]);
+		}
+		
+		@Override
+		protected void onPostExecute(String result) {
+			//TODO update some views
+		}
+    	
     }
     
     @Override  
