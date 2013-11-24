@@ -260,7 +260,7 @@ public class MainActivity extends Activity {
 	        params.put("latitude", String.valueOf(lat));
 	        params.put("longitude", String.valueOf(lon));
 	        new UploadDataTask().execute("http://api.jilinmei.com:3000/locations/upload",
-	        							 getRequestData(params, "utf-8").toString());
+	        							 composePostData(params));
 	        
 	        //更新lastLocationData
 	        bInitial = false;
@@ -277,20 +277,20 @@ public class MainActivity extends Activity {
 		}
     }
     
-    public static StringBuffer getRequestData(Map<String, String> params, String encode) {
+    private String composePostData(Map<String, String> params) {
     	StringBuffer stringBuffer = new StringBuffer();    //存储封装好的请求体信息
         try {
         	for(Map.Entry<String, String> entry : params.entrySet()) {
     	    stringBuffer.append(entry.getKey())
     	                       .append("=")
-    	                       .append(URLEncoder.encode(entry.getValue(), encode))
+    	                       .append(entry.getValue())
     	                       .append("&");
     	    }
     	    stringBuffer.deleteCharAt(stringBuffer.length() - 1);    //删除最后的一个"&"
-    	} catch (Exception e) {
-    		e.printStackTrace();
+    	} catch (Exception ex) {
+    		ex.printStackTrace();
     	}
-    	return stringBuffer;
+    	return stringBuffer.toString();
     }
     
     private InputStream openHttpConnection(String urlString, String params) throws IOException {
