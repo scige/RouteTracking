@@ -38,7 +38,8 @@ import com.baidu.platform.comapi.basestruct.GeoPoint;
 
 public class MainActivity extends Activity {
 	
-	private static final String TAG = "MainActivity";
+	private static final String DEBUG_TAG = "Debug";
+	private static final String EXCEPTION_TAG = "Exception";
 
 	boolean bStatus = true;
 	boolean bInitial = true;
@@ -192,10 +193,10 @@ public class MainActivity extends Activity {
             	sb.append("\naddr : ");
             	sb.append(location.getAddrStr());
             } 
-    		//Log.d(TAG, "DEBUG: " + sb.toString());
+    		Log.v(DEBUG_TAG, sb.toString());
     		
-    		Log.d(TAG, "DEBUG: " + lastLocationData.latitude + ", "
-    							 + lastLocationData.longitude);
+    		Log.d(DEBUG_TAG, "location: " + lastLocationData.latitude + ", "
+    							    + lastLocationData.longitude);
         	
         	if (bInitial == false &&
         		lastLocationData.latitude == location.getLatitude() &&
@@ -205,7 +206,7 @@ public class MainActivity extends Activity {
         	float[] results = new float[1];
         	Location.distanceBetween(location.getLatitude(), location.getLongitude(),
         			lastLocationData.latitude, lastLocationData.longitude, results);
-    		Log.d(TAG, "DEBUG: " + "Distance: " + results[0]);
+    		Log.d(DEBUG_TAG, "distance: " + results[0]);
         	//locationText.setText("Distance: " + results[0]);
         	if (results[0] < 10.0)
         		return;
@@ -286,7 +287,7 @@ public class MainActivity extends Activity {
     	    }
     	    stringBuffer.deleteCharAt(stringBuffer.length() - 1);    //删除最后的一个"&"
     	} catch (Exception ex) {
-    		Log.w(TAG, "EXCEPTION: " + ex.getLocalizedMessage());
+    		Log.w(EXCEPTION_TAG, "" + ex.getLocalizedMessage());
     	}
     	return stringBuffer.toString();
     }
@@ -320,7 +321,7 @@ public class MainActivity extends Activity {
 	    		in = httpConn.getInputStream();
 	    	}
     	} catch (Exception ex) {
-    		Log.w(TAG, "EXCEPTION: " + ex.getLocalizedMessage());
+    		Log.w(EXCEPTION_TAG, "" + ex.getLocalizedMessage());
     		throw new IOException("Error connecting");
     	}
     	
@@ -335,7 +336,7 @@ public class MainActivity extends Activity {
 			//TODO parse response data
 			in.close();
 		} catch (IOException ex) {
-			Log.w(TAG, "EXCEPTION: " + ex.getLocalizedMessage());
+			Log.w(EXCEPTION_TAG, "" + ex.getLocalizedMessage());
 		}
 		return result;
     }
