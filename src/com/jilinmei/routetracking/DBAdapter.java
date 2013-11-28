@@ -5,24 +5,30 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DBAdapter {
 	
+	private static final String TAG = "DBAdapter";
+	
 	static final String DATABASE_NAME = "MyDB";
 	static final String DATABASE_TABLE = "location_data";
-	static final int DATABASE_VERSION = 1;
+	static final int DATABASE_VERSION = 2;
 	
 	static final String COLUMN_ID = "_id";
+	static final String COLUMN_UUID = "uuid";
+	static final String COLUMN_DEVICEID = "deviceid";
 	static final String COLUMN_LATITUDE = "latitude";
 	static final String COLUMN_LONGITIDE = "longitude";
 	static final String COLUMN_CREATED_AT = "created_at";
 	
 	static final String SQL_CREATE_TABLE =
 			"create table location_data (_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+			"uuid text, deviceid text," +
 			"latitude REAL, longitude REAL, created_at TEXT NOT NULL)";
 	
 	static final String SQL_DROP_TABLE =
-			"";
+			"drop table if exists location_data";
 	
 	Context context;
 	DatabaseHelper dbHelper;
@@ -42,13 +48,16 @@ public class DBAdapter {
 		@Override
 		public void onCreate(SQLiteDatabase db) {
 			// TODO Auto-generated method stub
+			Log.i(TAG, "running onCreate()");
 			db.execSQL(SQL_CREATE_TABLE);
 		}
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			// TODO Auto-generated method stub
-			
+			Log.i(TAG, "running onUpgrade()");
+			db.execSQL(SQL_DROP_TABLE);
+			onCreate(db);
 		}
 		
 	}
@@ -62,8 +71,11 @@ public class DBAdapter {
 		dbHelper.close();
 	}
 	
-	public boolean insertLocation(double lat, double lon) {
+	public boolean insertLocation(String uuid, String deviceid,
+								  double lat, double lon) {
 		ContentValues values = new ContentValues();
+		values.put(COLUMN_UUID, uuid);
+		values.put(COLUMN_DEVICEID, deviceid);
 		values.put(COLUMN_LATITUDE, lat);
 		values.put(COLUMN_LONGITIDE, lon);
 		values.put(COLUMN_CREATED_AT, "16:50");

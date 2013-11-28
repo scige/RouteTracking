@@ -252,10 +252,14 @@ public class MainActivity extends Activity {
 	        locationText.setText(lat + ", " + lon);
 	        
 	        //存储到DB中
-	        db.insertLocation(lat, lon);
+	        String uuid = "abc";
+	        String deviceid = "abc";
+	        db.insertLocation(uuid, deviceid, lat, lon);
 	        
 	        //发送到服务器
 	        Map<String, String> params = new HashMap<String, String>();
+	        params.put("uuid", uuid);
+	        params.put("deviceid", deviceid);
 	        params.put("latitude", String.valueOf(lat));
 	        params.put("longitude", String.valueOf(lon));
 	        new UploadDataTask().execute("http://api.jilinmei.com:3000/locations/upload",
