@@ -8,12 +8,16 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -252,8 +256,12 @@ public class MainActivity extends Activity {
 	        locationText.setText(lat + ", " + lon);
 	        
 	        //存储到DB中
-	        String uuid = "abc";
-	        String deviceid = "abc";
+	        TelephonyManager tm = (TelephonyManager)getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+	        String deviceid = "" + tm.getDeviceId();
+	        String serialNumber = "" + tm.getSimSerialNumber();
+	        String androidid = "" + Secure.getString(getContentResolver(),Secure.ANDROID_ID);
+	        UUID uuidObj = new UUID(androidid.hashCode(), ((long)deviceid.hashCode() << 32) | serialNumber.hashCode());
+	        String uuid = uuidObj.toString();
 	        db.insertLocation(uuid, deviceid, lat, lon);
 	        
 	        //发送到服务器

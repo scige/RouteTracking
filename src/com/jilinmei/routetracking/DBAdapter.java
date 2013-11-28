@@ -1,5 +1,8 @@
 package com.jilinmei.routetracking;
 
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -73,12 +76,16 @@ public class DBAdapter {
 	
 	public boolean insertLocation(String uuid, String deviceid,
 								  double lat, double lon) {
+		SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		//sDateFormat.setTimeZone(TimeZone.getTimeZone("Asia/shanghai"));
+	    String strDate = sDateFormat.format(new java.util.Date());
+		
 		ContentValues values = new ContentValues();
 		values.put(COLUMN_UUID, uuid);
 		values.put(COLUMN_DEVICEID, deviceid);
 		values.put(COLUMN_LATITUDE, lat);
 		values.put(COLUMN_LONGITIDE, lon);
-		values.put(COLUMN_CREATED_AT, "16:50");
+		values.put(COLUMN_CREATED_AT, strDate);
 		db.insert(DATABASE_TABLE, null, values);
 		return true;
 	}
